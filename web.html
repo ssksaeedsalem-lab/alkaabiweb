@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مترجم سعيد سالم الكعبي</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background: #f8f9fa;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .header {
+        background: #4285f4;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .translator {
+        display: flex;
+        flex-direction: column;
+      }
+      @media (min-width: 768px) {
+        .translator {
+          flex-direction: row;
+        }
+      }
+      .section {
+        flex: 1;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+      }
+      .section:first-child {
+        border-left: none;
+      }
+      .section:last-child {
+        border-right: none;
+      }
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      textarea {
+        width: 100%;
+        height: 150px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        resize: vertical;
+        font-size: 16px;
+      }
+      .swap-btn {
+        background: #f1f3f4;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin: 20px auto;
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      .swap-btn:hover {
+        background: #e8eaed;
+      }
+      .translate-btn {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+        width: 100%;
+      }
+      .translate-btn:hover {
+        background: #3367d6;
+      }
+      .error {
+        color: red;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">مترجم سعيد سالم الكعبي (alkaabi)</div>
+      <div class="translator">
+        <div class="section">
+          <select id="fromLang">
+            <option value="en">الإنجليزية</option>
+            <option value="ar" selected>العربية</option>
+            <option value="fr">الفرنسية</option>
+            <option value="es">الإسبانية</option>
+            <option value="de">الألمانية</option>
+            <option value="it">الإيطالية</option>
+            <option value="pt">البرتغالية</option>
+            <option value="ru">الروسية</option>
+            <option value="zh">الصينية</option>
+          </select>
+          <textarea
+            id="inputText"
+            placeholder="اكتب النص هنا للترجمة..."
+          ></textarea>
+        </div>
+
+        <button class="swap-btn" onclick="swapLanguages()">⇄</button>
+
+        <div class="section">
+          <select id="toLang">
+            <option value="ar" selected>العربية</option>
+            <option value="en">الإنجليزية</option>
+            <option value="fr">الفرنسية</option>
+            <option value="es">الإسبانية</option>
+            <option value="de">الألمانية</option>
+            <option value="it">الإيطالية</option>
+            <option value="pt">البرتغالية</option>
+            <option value="ru">الروسية</option>
+            <option value="zh">الصينية</option>
+          </select>
+          <textarea
+            id="outputText"
+            placeholder="الترجمة ستظهر هنا..."
+            readonly
+          ></textarea>
+        </div>
+      </div>
+      <button class="translate-btn" onclick="translateText()">ترجم</button>
+      <div id="errorMessage" class="error"></div>
+    </div>
+
+    <script>
+      async function translateText() {
+        const inputText = document.getElementById("inputText").value.trim();
+        const fromLang = document.getElementById("fromLang").value;
+        const toLang = document.getElementById("toLang").value;
+        const outputArea = document.getElementById("outputText");
+        const errorDiv = document.getElementById("errorMessage");
+
+        errorDiv.textContent = "";
+
+        if (!inputText) {
+          errorDiv.textContent = "يرجى إدخال نص للترجمة.";
+          return;
+        }
+
+        if (fromLang === toLang) {
+          outputArea.value = inputText;
+          return;
+        }
+
+        // URL-encode the text
+        const encodedText = encodeURIComponent(inputText);
+        const url = `https://lingva.ml/api/v1/${fromLang}/${toLang}/${encodedText}`;
+
+        outputArea.value = "جارٍ الترجمة...";
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.error || !data.translation) {
+            throw new Error("فشل في استرجاع الترجمة.");
+          }
+
+          outputArea.value = data.translation;
+        } catch (err) {
+          console.error("Translation error:", err);
+          outputArea.value = "";
+          errorDiv.textContent =
+            "خطأ: " + (err.message || "يرجى المحاولة لاحقًا.");
+        }
+      }
+
+      function swapLanguages() {
+        const fromSelect = document.getElementById("fromLang");
+        const toSelect = document.getElementById("toLang");
+
+        const temp = fromSelect.value;
+        fromSelect.value = toSelect.value;
+        toSelect.value = temp;
+
+        const tempText = document.getElementById("inputText").value;
+        document.getElementById("inputText").value =
+          document.getElementById("outputText").value;
+        document.getElementById("outputText").value = tempText;
+      }
+    </script>
+  </body>
+</html>
